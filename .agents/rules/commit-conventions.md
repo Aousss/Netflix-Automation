@@ -23,3 +23,4 @@ fix(authentication): fix the error when the user cannot login
 | **Refactoring (code cleaner)** | `refactor(<scope>): ...` | `refactor/` |
 | **Documentation** | `docs(<scope>): ...` | `docs/` |
 | **Testing** | `test(<scope>): ...` | `test/` |
+

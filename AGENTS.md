@@ -33,3 +33,4 @@ docs(readme): update Laravel Cloud and TiDB Cloud deployment steps
 1. Always include a meaningful `<scope>` in parentheses (e.g., `authentication`, `vault`, `billing`, `imap`, `admin`, `dashboard`, `database`, `readme`, `rules`).
 2. Keep the `<description>` concise, lowercase, and written in the imperative mood.
 3. When creating feature or fix branches, prefix the branch name with the matching prefix from the table above (`feat/`, `fix/`, `hotfix/`, `imp/`, `ui/`, `refactor/`, `docs/`, `test/`).
+
