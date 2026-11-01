@@ -31,8 +31,8 @@ class DatabaseSeeder extends Seeder
 
         $members = [
             [
-                'name' => 'Firdaus (Leader)',
-                'email' => 'admin@household.local',
+                'name' => env('ADMIN_NAME', 'Firdaus (Leader)'),
+                'email' => strtolower(trim((string) env('ADMIN_EMAIL', 'admin@household.local'))),
                 'role' => 'admin',
                 'netflix_profile_name' => 'Firdaus',
                 'netflix_profile_pin' => '1024',

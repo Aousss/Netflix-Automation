@@ -37,6 +37,18 @@
                 </p>
             </div>
 
+            @if (! empty($dbError))
+                <div class="p-4 rounded-xl bg-amber-950/70 border border-amber-700/80 text-amber-100 text-xs space-y-1.5">
+                    <div class="font-bold text-amber-300 flex items-center gap-2 text-sm">
+                        <svg class="w-4 h-4 shrink-0 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                        </svg>
+                        <span>Database Connection Notice (Check Laravel Cloud Environment Variables)</span>
+                    </div>
+                    <p class="font-mono text-[11px] text-amber-200/90 break-all">{{ $dbError }}</p>
+                </div>
+            @endif
+
             @if (session('error'))
                 <div class="p-4 rounded-xl bg-rose-950/60 border border-rose-800/80 text-rose-200 text-sm flex items-center gap-2.5">
                     <svg class="w-5 h-5 shrink-0 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -63,9 +75,14 @@
                 </div>
             @endif
 
+            @php
+                $showQuickAccess = app()->environment('local')
+                    || config('app.debug')
+                    || $whitelistedUsers->contains(fn ($u) => $u->email === 'admin@household.local');
+            @endphp
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start fade-in-up-delay">
-                <!-- Left Column: Quick Household Member Login (Dev/Demo only) -->
-                @if (app()->environment('local') || config('app.debug'))
+                <!-- Left Column: Quick Household Member Login (Dev/Demo or Initial Setup) -->
+                @if ($showQuickAccess)
                     <div class="lg:col-span-7 bg-zinc-900/85 border border-zinc-800 rounded-2xl p-6 shadow-2xl space-y-4">
                         <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
                             <div>
@@ -108,7 +125,7 @@
                 @endif
 
                 <!-- Right Column: Google OAuth + Magic Link -->
-                <div class="{{ (app()->environment('local') || config('app.debug')) ? 'lg:col-span-5' : 'lg:col-span-6 lg:col-start-4' }} bg-zinc-900/80 backdrop-blur-xl border border-zinc-800 rounded-2xl p-6 shadow-2xl space-y-6">
+                <div class="{{ $showQuickAccess ? 'lg:col-span-5' : 'lg:col-span-6 lg:col-start-4' }} bg-zinc-900/80 backdrop-blur-xl border border-zinc-800 rounded-2xl p-6 shadow-2xl space-y-6">
                     <div class="space-y-3">
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-bold uppercase tracking-wider text-zinc-400">Sign In</span>

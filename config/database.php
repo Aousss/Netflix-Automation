@@ -54,14 +54,40 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? array_filter([
-                (class_exists(\Pdo\Mysql::class) ? \Pdo\Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA') ?: (
-                    str_contains((string) env('DB_HOST', ''), 'tidbcloud.com') && file_exists('/etc/ssl/certs/ca-certificates.crt')
-                        ? '/etc/ssl/certs/ca-certificates.crt'
-                        : null
-                ),
-                (class_exists(\Pdo\Mysql::class) ? \Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT : PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT) => env('MYSQL_ATTR_SSL_VERIFY_SERVER_CERT'),
-            ], fn ($value) => ! is_null($value) && $value !== '') : [],
+            'options' => extension_loaded('pdo_mysql') ? (function () {
+                $sslCaConstant = class_exists(\Pdo\Mysql::class) ? \Pdo\Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA;
+                $sslVerifyConstant = class_exists(\Pdo\Mysql::class) ? \Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT : PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT;
+
+                $configuredCa = env('MYSQL_ATTR_SSL_CA');
+                $resolvedCa = null;
+
+                if (! empty($configuredCa) && @is_readable($configuredCa)) {
+                    $resolvedCa = $configuredCa;
+                } elseif (str_contains((string) env('DB_HOST', ''), 'tidbcloud.com') || ! empty($configuredCa)) {
+                    foreach ([
+                        '/etc/ssl/certs/ca-certificates.crt',
+                        '/etc/pki/tls/certs/ca-bundle.crt',
+                        '/etc/ssl/cert.pem',
+                    ] as $candidate) {
+                        if (@is_readable($candidate)) {
+                            $resolvedCa = $candidate;
+                            break;
+                        }
+                    }
+                }
+
+                $opts = [];
+                if ($resolvedCa) {
+                    $opts[$sslCaConstant] = $resolvedCa;
+                }
+                if (env('MYSQL_ATTR_SSL_VERIFY_SERVER_CERT') !== null) {
+                    $opts[$sslVerifyConstant] = filter_var(env('MYSQL_ATTR_SSL_VERIFY_SERVER_CERT'), FILTER_VALIDATE_BOOLEAN);
+                } elseif (str_contains((string) env('DB_HOST', ''), 'tidbcloud.com') && ! $resolvedCa) {
+                    $opts[$sslVerifyConstant] = false;
+                }
+
+                return $opts;
+            })() : [],
         ],
 
         'mariadb' => [
