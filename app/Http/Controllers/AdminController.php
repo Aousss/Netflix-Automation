@@ -38,7 +38,9 @@ class AdminController extends Controller
                 'member' => $payment->user?->name,
             ]);
 
-            return back()->with('status', "Marked {$payment->user?->name}'s payment as Overdue (receipt rejected).");
+            return back()
+                ->with('status', "Marked {$payment->user?->name}'s payment as Overdue (receipt rejected).")
+                ->with('admin_tab', 'queue');
         }
 
         $payment->update([
@@ -54,7 +56,9 @@ class AdminController extends Controller
             'amount' => $payment->amount,
         ]);
 
-        return back()->with('status', "Approved {$payment->user?->name}'s RM {$payment->amount} payment! Vault access unlocked.");
+        return back()
+            ->with('status', "Approved {$payment->user?->name}'s RM {$payment->amount} payment! Vault access unlocked.")
+            ->with('admin_tab', 'queue');
     }
 
     public function updatePaymentStatus(Request $request, Payment $payment): RedirectResponse
@@ -77,7 +81,9 @@ class AdminController extends Controller
             'status' => $validated['status'],
         ]);
 
-        return back()->with('status', "Updated {$payment->user?->name}'s payment status to " . strtoupper($validated['status']) . '.');
+        return back()
+            ->with('status', "Updated {$payment->user?->name}'s payment status to " . strtoupper($validated['status']) . '.')
+            ->with('admin_tab', 'queue');
     }
 
     public function updateSettings(Request $request): RedirectResponse
@@ -123,7 +129,9 @@ class AdminController extends Controller
             'password_rotated' => ! empty($validated['netflix_password']),
         ]);
 
-        return back()->with('status', 'Master Netflix Vault & DuitNow Billing settings updated.');
+        return back()
+            ->with('status', 'Master Netflix Vault & DuitNow Billing settings updated.')
+            ->with('admin_tab', 'vault');
     }
 
     public function updateMember(Request $request, User $member): RedirectResponse
@@ -157,7 +165,9 @@ class AdminController extends Controller
 
         AuditLog::record('admin.member_updated', ['member_id' => $member->id, 'email' => $member->email]);
 
-        return back()->with('status', "Updated household member {$member->name}.");
+        return back()
+            ->with('status', "Updated household member {$member->name}.")
+            ->with('admin_tab', 'members');
     }
 
     public function generateCycle(Request $request): RedirectResponse
@@ -171,7 +181,9 @@ class AdminController extends Controller
         $month = $validated['cycle_month'] ?? now()->format('Y-m');
         Artisan::call('billing:generate-cycle', ['month' => $month]);
 
-        return back()->with('status', "Generated/synced billing cycle for {$month}.");
+        return back()
+            ->with('status', "Generated/synced billing cycle for {$month}.")
+            ->with('admin_tab', 'members');
     }
 }
 

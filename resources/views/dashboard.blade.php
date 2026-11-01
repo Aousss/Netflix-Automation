@@ -31,8 +31,11 @@
           profileName: '{{ e($user->netflix_profile_name) }}',
           profilePin: '{{ e($user->netflix_profile_pin ?? '----') }}',
           isStepUpVerified: {{ $isStepUpVerified ? 'true' : 'false' }},
-          isOverdueLocked: {{ (! $user->canAccessVault($myPayment)) ? 'true' : 'false' }}
-      })">
+          isOverdueLocked: {{ (! $user->canAccessVault($myPayment)) ? 'true' : 'false' }},
+          initialAdminTab: '{{ session('admin_tab', $pendingReceipts->count() > 0 ? 'queue' : 'vault') }}',
+          initialAdminOpen: {{ session()->has('admin_tab') ? 'true' : 'false' }}
+      })"
+      @keydown.escape.window="adminDrawerOpen = false; otpModalOpen = false; paymentModalOpen = false">
 
     <!-- Ambient Netflix Glow -->
     <div class="fixed inset-0 pointer-events-none overflow-hidden">
@@ -96,7 +99,7 @@
                 @endif
 
                 @if ($user->isAdmin())
-                    <button @click="adminDrawerOpen = true" type="button"
+                    <button @click="openAdminPanel()" type="button"
                             class="relative inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-red-600/15 hover:bg-red-600/25 border border-red-600/40 text-red-300 text-xs font-semibold transition">
                         <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
@@ -639,9 +642,13 @@
             </section>
         </div>
 
-        <!-- ==================== ADMIN SECTION ==================== -->
+        <!-- ==================== ADMIN SECTION (INLINE + MODAL OVERLAY) ==================== -->
         @if ($user->isAdmin())
-            <section class="bg-zinc-900/90 border border-red-900/40 rounded-2xl p-5 sm:p-6 space-y-6 fade-in-d3" x-data="{ adminTab: 'queue' }">
+            <div :class="adminDrawerOpen ? 'fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto' : ''"
+                 @click.self="adminDrawerOpen = false">
+            <section id="admin-panel"
+                     :class="adminDrawerOpen ? 'w-full max-w-5xl max-h-[90vh] overflow-y-auto shadow-2xl ring-2 ring-red-600/50' : ''"
+                     class="bg-zinc-900/95 border border-red-900/40 rounded-2xl p-5 sm:p-6 space-y-6 fade-in-d3">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 pb-4">
                     <div>
                         <div class="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-red-400">
@@ -653,29 +660,39 @@
                         <h2 class="text-lg sm:text-xl font-bold text-white mt-0.5">Manage Household</h2>
                     </div>
 
-                    <div class="flex flex-wrap gap-1.5 bg-zinc-950 p-1 rounded-xl border border-zinc-800 text-xs">
-                        <button @click="adminTab = 'queue'" type="button"
-                                :class="adminTab === 'queue' ? 'bg-red-600 text-white font-semibold' : 'text-zinc-400 hover:text-white'"
-                                class="px-3 py-1.5 rounded-lg transition">
-                            Receipts
-                            @if ($pendingReceipts->count() > 0)
-                                <span class="ml-1 px-1.5 py-0.5 rounded-full bg-amber-500 text-zinc-950 font-extrabold text-[10px] leading-none">{{ $pendingReceipts->count() }}</span>
-                            @endif
-                        </button>
-                        <button @click="adminTab = 'vault'" type="button"
-                                :class="adminTab === 'vault' ? 'bg-red-600 text-white font-semibold' : 'text-zinc-400 hover:text-white'"
-                                class="px-3 py-1.5 rounded-lg transition">
-                            Settings
-                        </button>
-                        <button @click="adminTab = 'members'" type="button"
-                                :class="adminTab === 'members' ? 'bg-red-600 text-white font-semibold' : 'text-zinc-400 hover:text-white'"
-                                class="px-3 py-1.5 rounded-lg transition">
-                            Members
-                        </button>
-                        <button @click="adminTab = 'audit'" type="button"
-                                :class="adminTab === 'audit' ? 'bg-red-600 text-white font-semibold' : 'text-zinc-400 hover:text-white'"
-                                class="px-3 py-1.5 rounded-lg transition">
-                            Audit Log
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div class="flex flex-wrap gap-1.5 bg-zinc-950 p-1 rounded-xl border border-zinc-800 text-xs">
+                            <button @click="adminTab = 'queue'" type="button"
+                                    :class="adminTab === 'queue' ? 'bg-red-600 text-white font-semibold' : 'text-zinc-400 hover:text-white'"
+                                    class="px-3 py-1.5 rounded-lg transition">
+                                Receipts
+                                @if ($pendingReceipts->count() > 0)
+                                    <span class="ml-1 px-1.5 py-0.5 rounded-full bg-amber-500 text-zinc-950 font-extrabold text-[10px] leading-none">{{ $pendingReceipts->count() }}</span>
+                                @endif
+                            </button>
+                            <button @click="adminTab = 'vault'" type="button"
+                                    :class="adminTab === 'vault' ? 'bg-red-600 text-white font-semibold' : 'text-zinc-400 hover:text-white'"
+                                    class="px-3 py-1.5 rounded-lg transition">
+                                Settings
+                            </button>
+                            <button @click="adminTab = 'members'" type="button"
+                                    :class="adminTab === 'members' ? 'bg-red-600 text-white font-semibold' : 'text-zinc-400 hover:text-white'"
+                                    class="px-3 py-1.5 rounded-lg transition">
+                                Members
+                            </button>
+                            <button @click="adminTab = 'audit'" type="button"
+                                    :class="adminTab === 'audit' ? 'bg-red-600 text-white font-semibold' : 'text-zinc-400 hover:text-white'"
+                                    class="px-3 py-1.5 rounded-lg transition">
+                                Audit Log
+                            </button>
+                        </div>
+
+                        <button x-show="adminDrawerOpen" x-cloak @click="adminDrawerOpen = false" type="button"
+                                title="Close Admin Overlay"
+                                class="p-2 rounded-xl bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-white transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
                         </button>
                     </div>
                 </div>
@@ -927,6 +944,7 @@
                     @endif
                 </div>
             </section>
+            </div>
         @endif
     </main>
 
@@ -1127,8 +1145,16 @@
                 demoOtpCode: null,
 
                 paymentModalOpen: false,
-                adminDrawerOpen: false,
+                adminDrawerOpen: config.initialAdminOpen || false,
+                adminTab: config.initialAdminTab || 'vault',
                 toastMessage: '',
+
+                openAdminPanel(tab = null) {
+                    if (tab) {
+                        this.adminTab = tab;
+                    }
+                    this.adminDrawerOpen = true;
+                },
 
                 init() {
                     this.fetchVerificationEmails();
