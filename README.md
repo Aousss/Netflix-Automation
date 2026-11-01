@@ -41,6 +41,7 @@ Full engineering and product specifications are located in the [`docs/`](./docs)
 4. **[04 — Design Brief Documentation (DBD)](./docs/04-DBD-Design-Brief.md)**
 5. **[05 — Backend Schema Documentation (BSD)](./docs/05-BSD-Backend-Schema.md)**
 6. **[06 — Implementation Plan Documentation (IPD)](./docs/06-IPD-Implementation-Plan.md)**
+7. **[07 — Security Audit Report (SAR)](./docs/07-SAR-Security-Audit-Report.md)**
 
 ---
 
