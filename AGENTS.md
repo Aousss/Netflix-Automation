@@ -33,4 +33,5 @@ docs(readme): update Laravel Cloud and TiDB Cloud deployment steps
 1. Always include a meaningful `<scope>` in parentheses (e.g., `authentication`, `vault`, `billing`, `imap`, `admin`, `dashboard`, `database`, `readme`, `rules`).
 2. Keep the `<description>` concise, lowercase, and written in the imperative mood.
 3. When creating feature or fix branches, prefix the branch name with the matching prefix from the table above (`feat/`, `fix/`, `hotfix/`, `imp/`, `ui/`, `refactor/`, `docs/`, `test/`).
+4. **Auto-Commit on Completion (Commit Only, Do NOT Push):** Every time you finish making file or code changes for a task, automatically stage and commit the modified files locally (`git add ... && git commit -m "<type>(<scope>): <description>"`). **Do NOT run `git push`** unless the user explicitly asks to push.
 

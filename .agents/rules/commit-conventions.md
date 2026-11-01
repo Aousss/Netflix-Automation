@@ -24,3 +24,6 @@ fix(authentication): fix the error when the user cannot login
 | **Documentation** | `docs(<scope>): ...` | `docs/` |
 | **Testing** | `test(<scope>): ...` | `test/` |
 
+## Auto-Commit Workflow Rule
+* **Auto-Commit on Completion (Commit Only, Do NOT Push):** Every time you finish making file or code changes for a task, automatically stage and commit the modified files locally (`git add ... && git commit -m "<type>(<scope>): <description>"`). **Do NOT run `git push`** unless the user explicitly asks to push.
+
